@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+.input {
+  border: 2px solid white;
+  width: 100%;
+}
+
+.input:hover {
+  background-color: white;
+  color: black;
+  border-radius: 20%;
+}
