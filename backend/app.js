@@ -1,6 +1,6 @@
 const express = require("express");
 
-const connection = require("./config/databaseConnection.js");
+
 const userRouter = require("./routes/userRoutes.js");
 const noteRouter = require("./routes/noteRoutes.js");
 const logRouter = require("./routes/logRoute.js");
