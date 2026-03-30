@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../utils/axios";
 
 const Login = () => {
-  const [email, setEmail] = useState("solankivaibhav589@gmail.com");
-  const [password, setPassword] = useState("Vaibhav11");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const Navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -28,7 +28,7 @@ const Login = () => {
         },
         { withCredentials: true },
       );
-      (Navigate("/home"), (window.location.href = "/home"));
+      Navigate("/home");
     } catch (err) {
       console.log(err);
     }
