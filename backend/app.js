@@ -27,6 +27,6 @@ app.get("/", (req, res) => {
   res.send("Welcome please login to access the notes");
 });
 
-app.listen(process.env.DB_PORT, () => {
+app.listen(process.env.PORT, () => {
   console.log("Server is running");
 });
