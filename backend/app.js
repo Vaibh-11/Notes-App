@@ -12,7 +12,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://myrealnotes.netlify.app/", 
+    origin: "https://myrealnotes.netlify.app", 
     credentials: true,
   }),
 );
