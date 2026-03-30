@@ -2,9 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Shimmer from "./Shimmer";
 import api from "../utils/axios";
-import socket from "../utils/socket";
 
-const Home = ({}) => {
+const Home = () => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
@@ -13,11 +12,15 @@ const Home = ({}) => {
   const [editContent, setEditContent] = useState("");
 
   const navigate = useNavigate();
-  const timeoutRef = useRef(null);
-  const joinedRef = useRef(false);
 
   useEffect(() => {
     checkUserAndFetch();
+
+    const interval = setInterval(() => {
+      fetchNotes();
+    }, 3000); // refresh every 3 sec
+
+    return () => clearInterval(interval);
   }, []);
 
   const checkUserAndFetch = async () => {
@@ -27,12 +30,7 @@ const Home = ({}) => {
       });
 
       setUserData(user.data);
-
-      const response = await api.get("/notes/getAllNotes", {
-        withCredentials: true,
-      });
-
-      setNotes(response.data);
+      await fetchNotes();
     } catch (err) {
       navigate("/login");
     } finally {
@@ -40,26 +38,16 @@ const Home = ({}) => {
     }
   };
 
-  useEffect(() => {
-    if (notes.length && !joinedRef.current) {
-      notes.forEach((note) => {
-        socket.emit("join_note", note.id);
+  const fetchNotes = async () => {
+    try {
+      const response = await api.get("/notes/getAllNotes", {
+        withCredentials: true,
       });
-      joinedRef.current = true;
+      setNotes(response.data);
+    } catch (err) {
+      console.log(err);
     }
-  }, [notes]);
-
-  useEffect(() => {
-    socket.on("receive_edit", ({ noteId, content }) => {
-      console.log("📥 Received update:", noteId);
-
-      setNotes((prev) =>
-        prev.map((note) => (note.id === noteId ? { ...note, content } : note)),
-      );
-    });
-
-    return () => socket.off("receive_edit");
-  }, []);
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -86,17 +74,10 @@ const Home = ({}) => {
           title: editTitle,
           content: editContent,
         },
-        { withCredentials: true },
+        { withCredentials: true }
       );
 
-      setNotes((prev) =>
-        prev.map((note) =>
-          note.id === id
-            ? { ...note, title: editTitle, content: editContent }
-            : note,
-        ),
-      );
-
+      await fetchNotes(); // refresh after update
       setEditingNote(null);
     } catch (err) {
       console.log(err.response?.data || err.message);
@@ -121,21 +102,7 @@ const Home = ({}) => {
                 <textarea
                   className="textarea w-full mb-2"
                   value={editContent}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setEditContent(value);
-
-                    clearTimeout(timeoutRef.current);
-
-                    timeoutRef.current = setTimeout(() => {
-                      if (editingNote) {
-                        socket.emit("edit_note", {
-                          noteId: editingNote.id,
-                          content: value,
-                        });
-                      }
-                    }, 300);
-                  }}
+                  onChange={(e) => setEditContent(e.target.value)}
                 />
 
                 <button
@@ -191,13 +158,14 @@ const Home = ({}) => {
                 >
                   Add Collab
                 </button>
+
                 <button
                   onClick={async () => {
                     try {
                       const res = await api.post(
                         `/notes/share/${note.id}`,
                         {},
-                        { withCredentials: true },
+                        { withCredentials: true }
                       );
 
                       navigator.clipboard.writeText(res.data.link);
